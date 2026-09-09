@@ -102,6 +102,9 @@
             classificacoes.push({ ...base, Ncm: '', NBS: '' });
         } else {
             anexosArr.forEach(a => {
+                 if(a.TipoPermissao == "VEDADO"){
+                 return;
+                 }  
                 const tipo = (a.TipoCodigo || '').toUpperCase();
                 classificacoes.push({
                     ...base,
