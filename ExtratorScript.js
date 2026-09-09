@@ -139,6 +139,57 @@
  
     const COLS_TEXTO = ['CST', 'cClassTrib', 'Codigo', 'Ncm', 'NBS'];
 
+
+
+ 
+///////////////////////// INICIO TRECHO SQL GERADOR//////////////////////
+
+// ---- Scape SQL --------------------
+    function escSQL(val) {
+        if (val === null || val === undefined) return 'NULL';
+        if (typeof val === 'number') return String(val);
+        if (typeof val === 'boolean') return val ? '1' : '0';
+        // Escapar aspas simples e caracteres especiais
+        return `'${String(val).replace(/'/g, "''").replace(/\n/g, ' ').replace(/\r/g, ' ')}'`;
+    }
+
+    // ---- 5. Gerar SQL INSERT para classificacoes --------------------
+    function gerarSQLInsert(tabela, dados) {
+        if (!dados.length) return '-- Nenhum dado para inserir';
+        
+        const colunas = Object.keys(dados[0]);
+        const sqlParts = [];
+        
+        dados.forEach((row) => {
+            const valores = colunas.map(col => escSQL(row[col]));
+            sqlParts.push(
+                `INSERT INTO ${tabela} (${colunas.join(', ')}) VALUES (${valores.join(', ')});`
+            );
+        });
+        
+        return sqlParts.join('\n');
+    }
+ 
+    // ----   Gerar e baixar os scripts SQL -----------
+    function baixarSQL(nome, sql) {
+        if (!sql || sql === '-- Nenhum dado para inserir') {
+            console.warn(`⚠️ Sem dados para ${nome}`);
+            return;
+        }
+        
+        const blob = new Blob([sql], { type: 'text/plain;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = nome.endsWith('.sql') ? nome : `${nome}.sql`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+    }
+ ///////////////////////// FIM TRECHO SQL GERADOR//////////////////////
+
+
+ /////////////////////////////// BAiXAR CSV///////////////////////////////////////////
     function baixarCSV(nome, linhas) {
         if (!linhas.length) return;
         const cols = Object.keys(linhas[0]);
@@ -163,7 +214,16 @@
         URL.revokeObjectURL(a.href);
     }
 
+    // Baixar e Gerar arquivo CSV
     baixarCSV('classificacoes.csv', classificacoes);
-    window.__classificacoes = classificacoes;
+
+
+     // Gerar SQLs
+    const sqlClassificacoes = gerarSQLInsert('classificacoes_tributarias', classificacoes);
+ 
+    // Baixar e Gerar arquivo SQL
+    baixarSQL('classificacoes_tributarias.sql',sqlClassificacoes);
+
+ 
   
 })();
